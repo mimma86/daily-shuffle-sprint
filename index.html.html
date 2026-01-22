@@ -1,0 +1,890 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Daily Shuffle Sprint</title>
+  <style>
+    :root{
+      --bg:#0b1020;
+      --card:#121a33;
+      --muted:#98a2c7;
+      --text:#e9edff;
+      --accent:#7c5cff;
+      --good:#2ee59d;
+      --bad:#ff5c7a;
+      --warn:#ffd166;
+      --shadow: 0 18px 60px rgba(0,0,0,.45);
+      --radius: 18px;
+    }
+    *{box-sizing:border-box}
+    body{
+      margin:0;
+      font-family: ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial, "Apple Color Emoji","Segoe UI Emoji";
+      background: radial-gradient(1000px 700px at 20% 10%, rgba(124,92,255,.25), transparent 55%),
+                  radial-gradient(900px 600px at 90% 30%, rgba(46,229,157,.18), transparent 55%),
+                  radial-gradient(1000px 700px at 40% 90%, rgba(255,92,122,.16), transparent 55%),
+                  var(--bg);
+      color:var(--text);
+      min-height:100vh;
+      display:flex;
+      align-items:center;
+      justify-content:center;
+      padding:24px;
+    }
+    .wrap{
+      width:min(980px, 100%);
+      display:grid;
+      grid-template-columns: 1.15fr .85fr;
+      gap:18px;
+    }
+    @media (max-width: 920px){
+      .wrap{grid-template-columns:1fr;}
+    }
+    .card{
+      background: linear-gradient(180deg, rgba(255,255,255,.04), rgba(255,255,255,.02));
+      border: 1px solid rgba(255,255,255,.08);
+      border-radius: var(--radius);
+      box-shadow: var(--shadow);
+      padding:18px;
+      position:relative;
+      overflow:hidden;
+    }
+    .card::before{
+      content:"";
+      position:absolute;
+      inset:-1px;
+      background: radial-gradient(600px 200px at 20% 0%, rgba(124,92,255,.18), transparent 60%),
+                  radial-gradient(500px 180px at 80% 10%, rgba(46,229,157,.12), transparent 55%);
+      pointer-events:none;
+      opacity:.9;
+    }
+    .card > *{position:relative;}
+
+    header{
+      display:flex;
+      align-items:center;
+      justify-content:space-between;
+      gap:14px;
+      margin-bottom:14px;
+    }
+    .brand{
+      display:flex;
+      align-items:center;
+      gap:10px;
+    }
+    .logo{
+      width:40px;height:40px;
+      border-radius:12px;
+      background: linear-gradient(135deg, rgba(124,92,255,.9), rgba(46,229,157,.8));
+      display:grid;
+      place-items:center;
+      box-shadow: 0 10px 30px rgba(124,92,255,.22);
+      font-weight:800;
+      letter-spacing:.5px;
+    }
+    h1{
+      font-size:18px;
+      margin:0;
+      line-height:1.2;
+    }
+    .sub{
+      margin:2px 0 0;
+      color:var(--muted);
+      font-size:12px;
+    }
+
+    .metaRow{
+      display:flex;
+      gap:10px;
+      flex-wrap:wrap;
+      justify-content:flex-end;
+      align-items:center;
+    }
+    .pill{
+      background: rgba(255,255,255,.06);
+      border: 1px solid rgba(255,255,255,.10);
+      border-radius: 999px;
+      padding:8px 10px;
+      display:flex;
+      gap:8px;
+      align-items:center;
+      font-size:12px;
+      color:var(--muted);
+      user-select:none;
+    }
+    .pill b{color:var(--text); font-weight:700;}
+
+    .big{
+      display:grid;
+      gap:14px;
+    }
+
+    .scrambleBox{
+      display:grid;
+      gap:10px;
+      padding:16px;
+      border-radius: 16px;
+      background: rgba(0,0,0,.18);
+      border: 1px dashed rgba(255,255,255,.18);
+    }
+    .scrambleTop{
+      display:flex;
+      justify-content:space-between;
+      align-items:flex-start;
+      gap:12px;
+    }
+    .prompt{
+      margin:0;
+      color:var(--muted);
+      font-size:13px;
+      line-height:1.35;
+    }
+    .hint{
+      font-size:12px;
+      color:rgba(255,255,255,.75);
+      background: rgba(255,209,102,.12);
+      border: 1px solid rgba(255,209,102,.22);
+      padding:6px 10px;
+      border-radius:999px;
+      white-space:nowrap;
+    }
+
+    .letters{
+      display:flex;
+      gap:8px;
+      flex-wrap:wrap;
+      align-items:center;
+    }
+    .tile{
+      width:44px;
+      height:52px;
+      border-radius:14px;
+      display:grid;
+      place-items:center;
+      font-size:22px;
+      font-weight:800;
+      background: rgba(255,255,255,.06);
+      border: 1px solid rgba(255,255,255,.10);
+      box-shadow: 0 10px 25px rgba(0,0,0,.18);
+      transform: translateY(0);
+      transition: transform .14s ease, border-color .14s ease;
+    }
+    .tile:hover{transform: translateY(-2px); border-color: rgba(124,92,255,.45)}
+
+    .inputRow{
+      display:flex;
+      gap:10px;
+      align-items:center;
+      flex-wrap:wrap;
+    }
+    .guess{
+      flex: 1 1 260px;
+      background: rgba(255,255,255,.06);
+      border: 1px solid rgba(255,255,255,.10);
+      color:var(--text);
+      border-radius: 14px;
+      padding:12px 14px;
+      font-size:16px;
+      outline:none;
+      transition: border-color .15s ease, box-shadow .15s ease;
+      text-transform: uppercase;
+      letter-spacing: .9px;
+    }
+    .guess:focus{
+      border-color: rgba(124,92,255,.55);
+      box-shadow: 0 0 0 4px rgba(124,92,255,.18);
+    }
+
+    .btnRow{display:flex; gap:10px; flex-wrap:wrap;}
+    button{
+      border:0;
+      cursor:pointer;
+      border-radius: 14px;
+      padding: 12px 14px;
+      font-weight:750;
+      letter-spacing:.2px;
+      color:var(--text);
+      background: rgba(255,255,255,.08);
+      border: 1px solid rgba(255,255,255,.12);
+      transition: transform .12s ease, background .12s ease, border-color .12s ease;
+      user-select:none;
+    }
+    button:hover{transform: translateY(-1px); border-color: rgba(255,255,255,.22)}
+    button:active{transform: translateY(0)}
+
+    .primary{
+      background: linear-gradient(135deg, rgba(124,92,255,.95), rgba(124,92,255,.55));
+      border-color: rgba(124,92,255,.5);
+      box-shadow: 0 14px 35px rgba(124,92,255,.26);
+    }
+    .ghost{
+      background: rgba(0,0,0,.18);
+    }
+
+    .status{
+      display:flex;
+      gap:10px;
+      align-items:flex-start;
+      justify-content:space-between;
+      flex-wrap:wrap;
+      padding: 14px 16px;
+      border-radius: 16px;
+      background: rgba(255,255,255,.04);
+      border: 1px solid rgba(255,255,255,.08);
+    }
+    .status p{margin:0; color:var(--muted); font-size:13px; line-height:1.35}
+    .badge{
+      font-size:12px;
+      border-radius: 999px;
+      padding:6px 10px;
+      border: 1px solid rgba(255,255,255,.14);
+      background: rgba(255,255,255,.06);
+      white-space:nowrap;
+    }
+    .badge.good{border-color: rgba(46,229,157,.35); background: rgba(46,229,157,.12); color: rgba(233,255,246,.95)}
+    .badge.bad{border-color: rgba(255,92,122,.35); background: rgba(255,92,122,.12); color: rgba(255,233,238,.95)}
+    .badge.warn{border-color: rgba(255,209,102,.35); background: rgba(255,209,102,.12); color: rgba(255,246,224,.95)}
+
+    .shake{animation: shake .28s ease-in-out 0s 1;}
+    @keyframes shake{
+      0%{transform: translateX(0)}
+      25%{transform: translateX(-6px)}
+      50%{transform: translateX(6px)}
+      75%{transform: translateX(-4px)}
+      100%{transform: translateX(0)}
+    }
+
+    .side{
+      display:grid;
+      gap:14px;
+    }
+    .panelTitle{
+      display:flex;
+      align-items:center;
+      justify-content:space-between;
+      margin:0 0 8px;
+    }
+    .panelTitle h2{
+      margin:0;
+      font-size:14px;
+      letter-spacing:.2px;
+    }
+    .tiny{
+      color:var(--muted);
+      font-size:12px;
+    }
+
+    .kpi{
+      display:grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap:10px;
+    }
+    @media (max-width: 520px){
+      .kpi{grid-template-columns:1fr}
+    }
+    .kpiBox{
+      background: rgba(0,0,0,.18);
+      border: 1px solid rgba(255,255,255,.08);
+      border-radius:16px;
+      padding:12px;
+    }
+    .kpiBox .label{color:var(--muted); font-size:12px; margin:0}
+    .kpiBox .value{margin:6px 0 0; font-size:18px; font-weight:850; letter-spacing:.3px}
+
+    .history{
+      display:grid;
+      gap:8px;
+      max-height: 240px;
+      overflow:auto;
+      padding-right:6px;
+    }
+    .row{
+      display:flex;
+      align-items:center;
+      justify-content:space-between;
+      gap:10px;
+      padding:10px 12px;
+      border-radius: 14px;
+      background: rgba(255,255,255,.04);
+      border: 1px solid rgba(255,255,255,.08);
+      font-size:12px;
+      color:var(--muted);
+    }
+    .row b{color:var(--text)}
+
+    .footerNote{
+      margin:0;
+      color:rgba(255,255,255,.55);
+      font-size:12px;
+      line-height:1.35;
+    }
+
+    .toast{
+      position:fixed;
+      left:50%;
+      bottom:18px;
+      transform:translateX(-50%);
+      background: rgba(18,26,51,.92);
+      border: 1px solid rgba(255,255,255,.12);
+      box-shadow: 0 18px 60px rgba(0,0,0,.5);
+      padding:10px 12px;
+      border-radius: 14px;
+      color: var(--text);
+      font-size: 12px;
+      opacity: 0;
+      pointer-events:none;
+      transition: opacity .16s ease, transform .16s ease;
+    }
+    .toast.show{
+      opacity:1;
+      transform: translateX(-50%) translateY(-4px);
+    }
+
+    a{color: inherit;}
+  </style>
+</head>
+<body>
+  <div class="wrap">
+    <main class="card big" aria-live="polite">
+      <header>
+        <div class="brand">
+          <div class="logo" aria-hidden="true">DS</div>
+          <div>
+            <h1>Daily Shuffle Sprint</h1>
+            <p class="sub">A 60-second word scramble with streaks and shareable results.</p>
+          </div>
+        </div>
+        <div class="metaRow">
+          <div class="pill"><span>⏱</span><b id="timeLeft">60</b><span>s</span></div>
+          <div class="pill"><span>🔥</span><b id="streak">0</b><span>streak</span></div>
+          <div class="pill"><span>🏁</span><b id="score">0</b><span>score</span></div>
+        </div>
+      </header>
+
+      <section class="scrambleBox" id="scrambleBox">
+        <div class="scrambleTop">
+          <p class="prompt" id="prompt">
+            Unscramble the letters to make a real word. You get <b>60 seconds</b>.
+            Correct answers increase your streak and score.
+          </p>
+          <div class="hint" id="hint">Hint: —</div>
+        </div>
+
+        <div class="letters" id="letters" aria-label="Scrambled letters"></div>
+
+        <div class="inputRow">
+          <input class="guess" id="guess" autocomplete="off" autocapitalize="characters" spellcheck="false" placeholder="TYPE YOUR GUESS" />
+          <div class="btnRow">
+            <button class="primary" id="submitBtn">Submit</button>
+            <button class="ghost" id="skipBtn">Skip</button>
+            <button class="ghost" id="shuffleBtn">Re-shuffle</button>
+          </div>
+        </div>
+      </section>
+
+      <section class="status">
+        <p id="statusText">Press <b>Enter</b> to submit. Use <b>Skip</b> if you’re stuck.</p>
+        <span class="badge" id="badge">Ready</span>
+      </section>
+    </main>
+
+    <aside class="card side">
+      <section>
+        <div class="panelTitle">
+          <h2>Today’s Challenge</h2>
+          <span class="tiny" id="dailyId">—</span>
+        </div>
+        <div class="kpi">
+          <div class="kpiBox">
+            <p class="label">Best Score (All-time)</p>
+            <p class="value" id="bestScore">0</p>
+          </div>
+          <div class="kpiBox">
+            <p class="label">Best Streak (All-time)</p>
+            <p class="value" id="bestStreak">0</p>
+          </div>
+          <div class="kpiBox">
+            <p class="label">Today’s Best</p>
+            <p class="value" id="todayBest">0</p>
+          </div>
+        </div>
+      </section>
+
+      <section>
+        <div class="panelTitle">
+          <h2>Attempts</h2>
+          <span class="tiny">Latest first</span>
+        </div>
+        <div class="history" id="history"></div>
+      </section>
+
+      <section>
+        <div class="panelTitle">
+          <h2>Share</h2>
+          <span class="tiny">Copy a results card</span>
+        </div>
+        <div class="btnRow">
+          <button class="primary" id="shareBtn">Copy Results</button>
+          <button class="ghost" id="restartBtn">Restart</button>
+        </div>
+        <p class="footerNote">
+          Tip: This game uses a <b>daily seed</b> so everyone gets the same sequence each day (like a mini “Wordle”).
+        </p>
+      </section>
+    </aside>
+  </div>
+
+  <div class="toast" id="toast">Copied!</div>
+
+  <script>
+    /**********************
+     * Daily Shuffle Sprint
+     * - Single-file, no libraries
+     * - Daily-seeded pseudo-random puzzles
+     * - Shareable results
+     * - LocalStorage stats
+     **********************/
+
+    // A curated list of common, punchy words that feel good in a scramble.
+    // You can expand this list to ~500+ for more variety.
+    const WORDS = [
+      { w: "VIRAL", h: "Internet-famous" },
+      { w: "MEME", h: "Shareable joke" },
+      { w: "HYPE", h: "Big excitement" },
+      { w: "TREND", h: "What’s hot" },
+      { w: "DRAMA", h: "Messy situation" },
+      { w: "SQUAD", h: "Your crew" },
+      { w: "SNACK", h: "Quick bite" },
+      { w: "GRIND", h: "Work hard" },
+      { w: "SPEED", h: "Fast" },
+      { w: "LEVEL", h: "Stage or rank" },
+      { w: "SKILL", h: "Talent" },
+      { w: "BOOST", h: "Increase" },
+      { w: "CHAOS", h: "Disorder" },
+      { w: "GLOW", h: "Radiance" },
+      { w: "VIBE", h: "Feeling" },
+      { w: "BRAVE", h: "Courage" },
+      { w: "SMART", h: "Clever" },
+      { w: "FOCUS", h: "Concentrate" },
+      { w: "POWER", h: "Strength" },
+      { w: "MONEY", h: "Cash" },
+      { w: "HAPPY", h: "Joyful" },
+      { w: "LUCKY", h: "Fortunate" },
+      { w: "FRESH", h: "New" },
+      { w: "CRISP", h: "Clean & sharp" },
+      { w: "WITTY", h: "Cleverly funny" },
+      { w: "ZEST", h: "Energy" },
+      { w: "SPICY", h: "Bold" },
+      { w: "HUMAN", h: "Not a bot" },
+      { w: "ROAST", h: "Playful insult" },
+      { w: "CLUTCH", h: "In the nick of time" },
+      { w: "BANGER", h: "A hit" },
+      { w: "AUDIO", h: "Sound" },
+      { w: "DANCE", h: "Move" },
+      { w: "PIXEL", h: "Tiny dot" },
+      { w: "MAGIC", h: "Feels unreal" },
+      { w: "SNEAK", h: "Quietly move" },
+      { w: "STACK", h: "Pile up" },
+      { w: "QUEST", h: "A mission" },
+      { w: "RIDDLE", h: "A puzzler" },
+      { w: "CRYPT", h: "Secret place" },
+      { w: "SPARK", h: "Small flame" },
+      { w: "BLAZE", h: "Big flame" },
+      { w: "GLITCH", h: "Unexpected bug" },
+      { w: "SPLASH", h: "Big impact" },
+      { w: "STREAK", h: "Back-to-back wins" },
+      { w: "SAVAGE", h: "Brutally honest" },
+      { w: "SILLY", h: "Goofy" },
+      { w: "CHILL", h: "Relax" },
+      { w: "HUSTLE", h: "Work hard" },
+      { w: "BRAIN", h: "Thinky organ" },
+      { w: "NINJA", h: "Stealthy one" },
+      { w: "NOBLE", h: "Honourable" },
+      { w: "PRIME", h: "Best time" },
+      { w: "ULTRA", h: "Beyond" },
+      { w: "SOLVE", h: "Figure out" },
+      { w: "GUESS", h: "Try" },
+      { w: "SCORE", h: "Points" },
+      { w: "BONUS", h: "Extra" },
+      { w: "VORTEX", h: "Spinning force" },
+      { w: "ORBIT", h: "Circle around" },
+      { w: "FABLE", h: "Short story" },
+      { w: "NOVA", h: "Star burst" },
+      { w: "QUICK", h: "Fast" },
+      { w: "BOLD", h: "Confident" },
+      { w: "SHARP", h: "Clever" },
+      { w: "CRAVE", h: "Strong desire" },
+      { w: "CANDY", h: "Sweet" },
+      { w: "HONEY", h: "Sweet syrup" },
+      { w: "PEARL", h: "Shiny gem" },
+      { w: "EMBER", h: "Glowing coal" },
+      { w: "ECHO", h: "Repeat sound" },
+      { w: "ALPHA", h: "Top dog" },
+      { w: "SIGMA", h: "Greek letter" },
+      { w: "OMEGA", h: "The end" }
+    ].filter(x => /^[A-Z]{4,7}$/.test(x.w));
+
+    // DOM
+    const elTimeLeft = document.getElementById('timeLeft');
+    const elStreak = document.getElementById('streak');
+    const elScore = document.getElementById('score');
+    const elLetters = document.getElementById('letters');
+    const elGuess = document.getElementById('guess');
+    const elStatusText = document.getElementById('statusText');
+    const elBadge = document.getElementById('badge');
+    const elHint = document.getElementById('hint');
+    const elScrambleBox = document.getElementById('scrambleBox');
+    const elHistory = document.getElementById('history');
+    const elBestScore = document.getElementById('bestScore');
+    const elBestStreak = document.getElementById('bestStreak');
+    const elTodayBest = document.getElementById('todayBest');
+    const elDailyId = document.getElementById('dailyId');
+    const elToast = document.getElementById('toast');
+
+    const submitBtn = document.getElementById('submitBtn');
+    const skipBtn = document.getElementById('skipBtn');
+    const shuffleBtn = document.getElementById('shuffleBtn');
+    const shareBtn = document.getElementById('shareBtn');
+    const restartBtn = document.getElementById('restartBtn');
+
+    // Game state
+    const GAME_SECONDS = 60;
+    let timeLeft = GAME_SECONDS;
+    let timer = null;
+
+    let score = 0;
+    let streak = 0;
+    let bestStreakRun = 0;
+
+    let current = null; // {w,h}
+    let currentScramble = "";
+
+    let attempts = []; // {guess, ok, word}
+
+    // Daily seed (everyone gets same sequence for the day)
+    const todayKey = (() => {
+      const d = new Date();
+      const yyyy = d.getFullYear();
+      const mm = String(d.getMonth()+1).padStart(2,'0');
+      const dd = String(d.getDate()).padStart(2,'0');
+      return `${yyyy}-${mm}-${dd}`;
+    })();
+
+    elDailyId.textContent = `Daily seed: ${todayKey}`;
+
+    // Storage keys
+    const LS = {
+      bestScore: 'dss_bestScore',
+      bestStreak: 'dss_bestStreak',
+      todayBestPrefix: 'dss_todayBest_' // + todayKey
+    };
+
+    // --- Utilities ---
+    function clamp(n, a, b){ return Math.max(a, Math.min(b, n)); }
+
+    function toast(msg){
+      elToast.textContent = msg;
+      elToast.classList.add('show');
+      setTimeout(() => elToast.classList.remove('show'), 1200);
+    }
+
+    // Simple deterministic PRNG (Mulberry32)
+    function mulberry32(seed){
+      let a = seed >>> 0;
+      return function(){
+        a += 0x6D2B79F5;
+        let t = a;
+        t = Math.imul(t ^ (t >>> 15), t | 1);
+        t ^= t + Math.imul(t ^ (t >>> 7), t | 61);
+        return ((t ^ (t >>> 14)) >>> 0) / 4294967296;
+      }
+    }
+
+    // Hash a string into an int32
+    function hash32(str){
+      let h = 2166136261;
+      for (let i=0; i<str.length; i++){
+        h ^= str.charCodeAt(i);
+        h = Math.imul(h, 16777619);
+      }
+      return h >>> 0;
+    }
+
+    const rng = mulberry32(hash32(todayKey));
+
+    function pickWord(){
+      // Deterministic selection via rng
+      const idx = Math.floor(rng() * WORDS.length);
+      return WORDS[idx];
+    }
+
+    function shuffleString(str){
+      const arr = str.split('');
+      // Fisher-Yates using daily rng
+      for (let i = arr.length - 1; i > 0; i--) {
+        const j = Math.floor(rng() * (i + 1));
+        [arr[i], arr[j]] = [arr[j], arr[i]];
+      }
+      const out = arr.join('');
+      // Ensure not identical if possible
+      if (out === str && str.length > 3) {
+        return shuffleString(str);
+      }
+      return out;
+    }
+
+    function renderLetters(scramble){
+      elLetters.innerHTML = '';
+      for (const ch of scramble){
+        const t = document.createElement('div');
+        t.className = 'tile';
+        t.textContent = ch;
+        elLetters.appendChild(t);
+      }
+    }
+
+    function setBadge(type, text){
+      elBadge.className = 'badge' + (type ? ` ${type}` : '');
+      elBadge.textContent = text;
+    }
+
+    function normalizeGuess(v){
+      return (v || '').toString().trim().toUpperCase().replace(/[^A-Z]/g,'');
+    }
+
+    function loadStats(){
+      const bestScore = Number(localStorage.getItem(LS.bestScore) || 0);
+      const bestStreak = Number(localStorage.getItem(LS.bestStreak) || 0);
+      const todayBest = Number(localStorage.getItem(LS.todayBestPrefix + todayKey) || 0);
+      elBestScore.textContent = String(bestScore);
+      elBestStreak.textContent = String(bestStreak);
+      elTodayBest.textContent = String(todayBest);
+    }
+
+    function updateStatsIfNeeded(){
+      const bestScore = Number(localStorage.getItem(LS.bestScore) || 0);
+      const bestStreak = Number(localStorage.getItem(LS.bestStreak) || 0);
+      const todayBestKey = LS.todayBestPrefix + todayKey;
+      const todayBest = Number(localStorage.getItem(todayBestKey) || 0);
+
+      if (score > bestScore) localStorage.setItem(LS.bestScore, String(score));
+      if (bestStreakRun > bestStreak) localStorage.setItem(LS.bestStreak, String(bestStreakRun));
+      if (score > todayBest) localStorage.setItem(todayBestKey, String(score));
+
+      loadStats();
+    }
+
+    function renderHistory(){
+      elHistory.innerHTML = '';
+      const view = attempts.slice().reverse().slice(0, 18);
+      if (view.length === 0){
+        const empty = document.createElement('div');
+        empty.className = 'row';
+        empty.innerHTML = `<span>No attempts yet.</span><span>Good luck.</span>`;
+        elHistory.appendChild(empty);
+        return;
+      }
+      for (const a of view){
+        const r = document.createElement('div');
+        r.className = 'row';
+        const icon = a.ok ? '✅' : '❌';
+        r.innerHTML = `<span>${icon} <b>${a.guess}</b> <span style="opacity:.85">→ ${a.word}</span></span><span>${a.ok ? `+${a.points}` : '0'} pts</span>`;
+        elHistory.appendChild(r);
+      }
+    }
+
+    function resetRound(){
+      current = pickWord();
+      currentScramble = shuffleString(current.w);
+      renderLetters(currentScramble);
+      elHint.textContent = `Hint: ${current.h}`;
+      elGuess.value = '';
+      elGuess.focus();
+    }
+
+    function startTimer(){
+      if (timer) clearInterval(timer);
+      timer = setInterval(() => {
+        timeLeft -= 1;
+        timeLeft = clamp(timeLeft, 0, GAME_SECONDS);
+        elTimeLeft.textContent = String(timeLeft);
+
+        if (timeLeft <= 10){
+          setBadge('warn', `Hurry: ${timeLeft}s`);
+        }
+
+        if (timeLeft <= 0){
+          endGame();
+        }
+      }, 1000);
+    }
+
+    function startGame(){
+      timeLeft = GAME_SECONDS;
+      score = 0;
+      streak = 0;
+      bestStreakRun = 0;
+      attempts = [];
+
+      elTimeLeft.textContent = String(timeLeft);
+      elScore.textContent = String(score);
+      elStreak.textContent = String(streak);
+
+      setBadge('', 'Ready');
+      elStatusText.textContent = 'Press Enter to submit. Use Skip if you’re stuck.';
+
+      loadStats();
+      renderHistory();
+      resetRound();
+      startTimer();
+    }
+
+    function computePoints(wordLen, streakNow){
+      // Points scale with difficulty + streak multiplier
+      const base = 10 + (wordLen - 4) * 6; // 4 letters ~10, 7 letters ~28
+      const mult = 1 + Math.min(1.2, streakNow * 0.06); // caps at +120%
+      return Math.round(base * mult);
+    }
+
+    function submitGuess(){
+      if (timeLeft <= 0) return;
+
+      const g = normalizeGuess(elGuess.value);
+      if (!g){
+        pingFail('Type a guess first.');
+        return;
+      }
+
+      const ok = g === current.w;
+      if (ok){
+        streak += 1;
+        bestStreakRun = Math.max(bestStreakRun, streak);
+
+        const pts = computePoints(current.w.length, streak);
+        score += pts;
+
+        elScore.textContent = String(score);
+        elStreak.textContent = String(streak);
+
+        setBadge('good', `Correct +${pts}`);
+        elStatusText.textContent = `Nice. You solved “${current.w}”. Next word loaded.`;
+
+        attempts.push({ guess: g, ok: true, word: current.w, points: pts });
+        renderHistory();
+        updateStatsIfNeeded();
+
+        // Small time bonus for keeping momentum
+        timeLeft = clamp(timeLeft + 2, 0, GAME_SECONDS);
+        elTimeLeft.textContent = String(timeLeft);
+
+        resetRound();
+      } else {
+        streak = 0;
+        elStreak.textContent = String(streak);
+        setBadge('bad', 'Wrong');
+        elStatusText.textContent = `Not quite. Try again or hit Skip.`;
+        attempts.push({ guess: g, ok: false, word: current.w, points: 0 });
+        renderHistory();
+        updateStatsIfNeeded();
+        pingFail('Wrong guess.');
+      }
+
+      elGuess.value = '';
+      elGuess.focus();
+    }
+
+    function skipWord(){
+      if (timeLeft <= 0) return;
+      streak = 0;
+      elStreak.textContent = String(streak);
+      setBadge('warn', 'Skipped');
+      elStatusText.textContent = `Skipped “${current.w}”. Next word loaded.`;
+      attempts.push({ guess: 'SKIP', ok: false, word: current.w, points: 0 });
+      renderHistory();
+      updateStatsIfNeeded();
+      resetRound();
+    }
+
+    function reshuffle(){
+      if (timeLeft <= 0) return;
+      currentScramble = shuffleString(current.w);
+      renderLetters(currentScramble);
+      setBadge('', 'Re-shuffled');
+      elStatusText.textContent = `Same word, new scramble.`;
+      elGuess.focus();
+    }
+
+    function pingFail(msg){
+      elScrambleBox.classList.remove('shake');
+      // Force reflow to restart animation
+      void elScrambleBox.offsetWidth;
+      elScrambleBox.classList.add('shake');
+      toast(msg);
+    }
+
+    function endGame(){
+      if (timer) clearInterval(timer);
+      timer = null;
+
+      timeLeft = 0;
+      elTimeLeft.textContent = '0';
+
+      setBadge('warn', 'Time');
+      elStatusText.textContent = `Time’s up. Final score: ${score}. Copy your results and challenge a friend.`;
+
+      updateStatsIfNeeded();
+      elGuess.blur();
+    }
+
+    function resultEmoji(){
+      // A compact results card people can paste into chat/social.
+      // Converts the attempt stream into emojis.
+      const blocks = attempts.slice(-10).map(a => a.ok ? '🟩' : '⬛');
+      if (blocks.length === 0) return '⬛⬛⬛⬛⬛';
+      return blocks.join('');
+    }
+
+    async function copyResults(){
+      const best = Number(localStorage.getItem(LS.bestScore) || 0);
+      const todayBest = Number(localStorage.getItem(LS.todayBestPrefix + todayKey) || 0);
+
+      const text = [
+        `Daily Shuffle Sprint — ${todayKey}`,
+        `Score: ${score} | Best: ${best} | Today’s Best: ${todayBest}`,
+        `Streak Peak: ${bestStreakRun}`,
+        `${resultEmoji()}`,
+        `#DailyShuffleSprint`
+      ].join('\n');
+
+      try {
+        await navigator.clipboard.writeText(text);
+        toast('Results copied to clipboard.');
+      } catch {
+        // Fallback for older browsers
+        const ta = document.createElement('textarea');
+        ta.value = text;
+        document.body.appendChild(ta);
+        ta.select();
+        document.execCommand('copy');
+        ta.remove();
+        toast('Results copied (fallback).');
+      }
+    }
+
+    // Events
+    submitBtn.addEventListener('click', submitGuess);
+    skipBtn.addEventListener('click', skipWord);
+    shuffleBtn.addEventListener('click', reshuffle);
+    shareBtn.addEventListener('click', copyResults);
+    restartBtn.addEventListener('click', startGame);
+
+    elGuess.addEventListener('keydown', (e) => {
+      if (e.key === 'Enter') submitGuess();
+    });
+
+    // Start
+    startGame();
+  </script>
+</body>
+</html>
